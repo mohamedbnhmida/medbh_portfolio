@@ -24,19 +24,19 @@ class TechnologiesSection extends StatelessWidget {
         LayoutBuilder(
           builder: (context, constraints) {
             // Responsive viewport fraction:
-            // Mobile (< 600): 0.45 (bigger items)
-            // Tablet (< 900): 0.25
+            // Mobile (< 600): 0.35 (for square cards)
+            // Tablet (< 900): 0.22
             // Desktop (> 900): 0.15
             double fraction = 0.15;
             if (constraints.maxWidth < 600) {
-              fraction = 0.45;
+              fraction = 0.35; // Adjusted for square cards
             } else if (constraints.maxWidth < 900) {
-              fraction = 0.25;
+              fraction = 0.22;
             }
 
             return CarouselSlider(
               options: CarouselOptions(
-                height: 120.0, // Reduced height
+                height: 160.0, // Increased for square cards + shadows
                 autoPlay: true,
                 autoPlayInterval: const Duration(seconds: 2),
                 autoPlayAnimationDuration: const Duration(milliseconds: 800),

@@ -19,6 +19,27 @@ class _ContactSectionState extends State<ContactSection> {
 
   Future<void> _sendEmail() async {
     if (_formKey.currentState!.validate()) {
+      // NOTE: For true "Direct" sending without opening an email app,
+      // you need a service like EmailJS (client-side) or a backend.
+      // Below is the placeholder for EmailJS implementation:
+      /*
+      final response = await http.post(
+        Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'service_id': 'YOUR_SERVICE_ID',
+          'template_id': 'YOUR_TEMPLATE_ID',
+          'user_id': 'YOUR_PUBLIC_KEY',
+          'template_params': {
+            'user_name': _nameController.text,
+            'user_email': _emailController.text,
+            'message': _messageController.text,
+          }
+        }),
+      );
+      */
+
+      // Fallback to mailto for now as placeholder
       final Uri params = Uri(
         scheme: 'mailto',
         path: AppStrings.email,
@@ -35,17 +56,14 @@ class _ContactSectionState extends State<ContactSection> {
             const SnackBar(content: Text('Could not open email client')),
           );
         }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Form submitted!')));
+        }
       }
     }
-  }
-
-  String? _encodeQueryParameters(Map<String, String> params) {
-    return params.entries
-        .map(
-          (e) =>
-              '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
-        )
-        .join('&');
   }
 
   @override
@@ -79,9 +97,16 @@ class _ContactSectionState extends State<ContactSection> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: Colors.white12,
+            color: AppColors.cardBackground,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.blueAccent.withOpacity(0.1),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
+            ],
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.white24),
+            border: Border.all(color: AppColors.borderAccent),
           ),
           child: Form(
             key: _formKey,
@@ -138,6 +163,7 @@ class _ContactSectionState extends State<ContactSection> {
             ),
           ),
         ),
+        const SizedBox(height: 70),
       ],
     );
   }
@@ -161,5 +187,14 @@ class _ContactSectionState extends State<ContactSection> {
         borderSide: const BorderSide(color: AppColors.accent),
       ),
     );
+  }
+
+  String? _encodeQueryParameters(Map<String, String> params) {
+    return params.entries
+        .map(
+          (e) =>
+              '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
+        )
+        .join('&');
   }
 }

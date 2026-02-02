@@ -29,6 +29,7 @@ class _HomePageState extends State<HomePage>
   final GlobalKey _contactKey = GlobalKey();
 
   bool _showBackToTop = false;
+  bool _isScrolled = false;
 
   @override
   void initState() {
@@ -39,10 +40,18 @@ class _HomePageState extends State<HomePage>
     )..repeat();
 
     _scrollController.addListener(() {
+      // Back to top button logic
       if (_scrollController.offset > 300 && !_showBackToTop) {
         setState(() => _showBackToTop = true);
       } else if (_scrollController.offset <= 300 && _showBackToTop) {
         setState(() => _showBackToTop = false);
+      }
+
+      // Sticky header scroll state logic
+      if (_scrollController.offset > 20 && !_isScrolled) {
+        setState(() => _isScrolled = true);
+      } else if (_scrollController.offset <= 20 && _isScrolled) {
+        setState(() => _isScrolled = false);
       }
     });
   }
@@ -101,90 +110,87 @@ class _HomePageState extends State<HomePage>
           children: [
             AnimatedColorCyclingGradient(controller: _controller),
             AnimatedShapes(controller: _controller),
-            Column(
-              children: [
-                ResponsiveHeader(onNavTap: scrollToSection),
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 40),
-
-                        // Hero Section with Profile Image on the RIGHT
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            if (constraints.maxWidth > 800) {
-                              return const Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
+            SingleChildScrollView(
+              controller: _scrollController,
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: MediaQuery.of(context).size.width < 600 ? 70 : 100,
+                  ), // Space for sticky header
+                  // Hero Section with Profile Image on the RIGHT
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (constraints.maxWidth > 800) {
+                        return const Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        LogoAndTagline(),
-                                        SizedBox(height: 40),
-                                        DescriptionSection(), // Moved here
-                                      ],
-                                    ),
-                                  ),
-                                  SizedBox(width: 40),
-                                  ProfileImage(), // Moved to the right
-                                ],
-                              );
-                            } else {
-                              return const Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  ProfileImage(),
-                                  SizedBox(height: 20),
                                   LogoAndTagline(),
-                                  SizedBox(height: 30),
-                                  DescriptionSection(), // Moved here as well for mobile flow
+                                  SizedBox(height: 40),
+                                  DescriptionSection(), // Moved here
                                 ],
-                              );
-                            }
-                          },
-                        ),
-
-                        // const SizedBox(height: 40), <-- Removed spacer
-                        // const DescriptionSection(), <-- Removed from here
-                        const SizedBox(height: 40),
-                        ExploreButton(onTap: () => scrollToSection(3)),
-
-                        const SizedBox(height: 80),
-                        SizedBox(
-                          key: _technologiesKey,
-                          child: const TechnologiesSection(),
-                        ),
-
-                        const SizedBox(height: 80),
-                        SizedBox(
-                          key: _projectsKey,
-                          child: const ProjectsSection(),
-                        ),
-
-                        const SizedBox(height: 80),
-                        SizedBox(
-                          key: _contactKey,
-                          child: const ContactSection(),
-                        ),
-
-                        const SizedBox(height: 60),
-                      ],
-                    ),
+                              ),
+                            ),
+                            SizedBox(width: 40),
+                            ProfileImage(), // Moved to the right
+                          ],
+                        );
+                      } else {
+                        return const Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            ProfileImage(),
+                            SizedBox(height: 20),
+                            LogoAndTagline(),
+                            SizedBox(height: 30),
+                            DescriptionSection(), // Moved here as well for mobile flow
+                          ],
+                        );
+                      }
+                    },
                   ),
-                ),
-              ],
+
+                  // const SizedBox(height: 40), <-- Removed spacer
+                  // const DescriptionSection(), <-- Removed from here
+                  const SizedBox(height: 40),
+                  ExploreButton(onTap: () => scrollToSection(3)),
+
+                  const SizedBox(height: 80),
+                  SizedBox(
+                    key: _technologiesKey,
+                    child: const TechnologiesSection(),
+                  ),
+
+                  const SizedBox(height: 80),
+                  SizedBox(key: _projectsKey, child: const ProjectsSection()),
+
+                  const SizedBox(height: 80),
+                  SizedBox(key: _contactKey, child: const ContactSection()),
+
+                  const SizedBox(height: 60),
+                ],
+              ),
+            ),
+            // Header at the top of the Stack (on top of content)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: ResponsiveHeader(
+                onNavTap: scrollToSection,
+                isScrolled: _isScrolled,
+              ),
             ),
             // Floating scroll-to-top button at leading (left) side
             if (_showBackToTop)
               Positioned(
-                bottom: 50,
-                left: 24,
+                bottom: 45,
+                right: 24,
                 child: FloatingActionButton.small(
                   onPressed: () => scrollToSection(0),
                   backgroundColor: AppColors.floatingButtonBackground,
@@ -197,7 +203,7 @@ class _HomePageState extends State<HomePage>
           ],
         ),
       ),
-      floatingActionButton: FloatingChatBotButton(),
+      // floatingActionButton: FloatingChatBotButton(),
     );
   }
 }

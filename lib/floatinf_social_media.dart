@@ -11,7 +11,7 @@ class FloatingSocialMediaBar extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
-      children: const [
+      children: [
         SocialIconHover(
           icon: FontAwesomeIcons.github,
           url: AppStrings.githubUrl,
@@ -22,7 +22,8 @@ class FloatingSocialMediaBar extends StatelessWidget {
         ),
         SocialIconHover(
           icon: FontAwesomeIcons.whatsapp,
-          url: "https://wa.me/${AppStrings.whatsappNumber}",
+          url:
+              "https://wa.me/${AppStrings.whatsappNumber}?text=${Uri.encodeComponent("Hello, I am interested in your portfolio!")}",
         ),
       ],
     );

@@ -7,7 +7,7 @@ class AppData {
   static const List<TechnologyModel> technologies = [
     TechnologyModel(
       name: "Flutter",
-      icon: FontAwesomeIcons.flutter,
+      assetPath: "assets/flutter.png",
       color: Colors.blueAccent,
     ),
 
@@ -44,7 +44,7 @@ class AppData {
     ),
     TechnologyModel(
       name: "Python",
-      icon: FontAwesomeIcons.python,
+      assetPath: "assets/python.png",
       color: Color(0xFF3776AB),
     ),
     TechnologyModel(
@@ -128,7 +128,12 @@ class AppData {
       name: "Kalonet",
       description: "Health and Wellness Application with Clean Architecture.",
       appIcon: "assets/projects/kalonet/icon.png",
-      screenshots: ["assets/projects/kalonet/screenshots/image1.png"],
+      screenshots: [
+        "assets/projects/kalonet/screenshots/image1.png",
+        "assets/projects/kalonet/screenshots/image2.png",
+        "assets/projects/kalonet/screenshots/image3.png",
+        "assets/projects/kalonet/screenshots/image4.png",
+      ],
       technologies: ["Flutter", "GetX", "Clean Arch", "WidgetKit"],
     ),
     ProjectModel(
