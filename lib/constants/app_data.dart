@@ -17,6 +17,11 @@ class AppData {
       color: Color(0xFFF05138),
     ),
     TechnologyModel(
+      name: "Backbase",
+      assetPath: "assets/backbase.png",
+      color: Color.fromARGB(255, 35, 34, 34),
+    ),
+    TechnologyModel(
       name: "Android",
       icon: FontAwesomeIcons.android,
       color: Color(0xFF3DDC84),

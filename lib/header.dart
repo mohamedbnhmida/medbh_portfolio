@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:medbh_portfolio/constants/app_colors.dart';
-import 'package:medbh_portfolio/floatinf_social_media.dart';
+import 'package:medbh_portfolio/floating_social_media.dart';
 import 'header_button.dart';
 
 class ResponsiveHeader extends StatelessWidget {

@@ -15,7 +15,7 @@ class DescriptionSection extends StatelessWidget {
         Text(
           'About Me',
           style: GoogleFonts.orbitron(
-            fontSize: isMobile ? 22 : 28, // Reduced for mobile
+            fontSize: isMobile ? 20 : 28, // Reduced for mobile
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),

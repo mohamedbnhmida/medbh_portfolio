@@ -25,7 +25,7 @@ class LogoAndTagline extends StatelessWidget {
               "Software Engineer",
             ],
             style: GoogleFonts.orbitron(
-              fontSize: isMobile ? 24 : 42,
+              fontSize: isMobile ? 22 : 42,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),

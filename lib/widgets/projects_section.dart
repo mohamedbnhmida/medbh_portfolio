@@ -28,7 +28,7 @@ class ProjectsSection extends StatelessWidget {
 
             final double height = isDesktop ? 600.0 : 500.0;
             // Mobile: 0.4 to show ~2.5-3 items. Desktop: 0.22 to show ~4-5 items.
-            final double fraction = isDesktop ? 0.22 : 0.7;
+            final double fraction = isDesktop ? 0.22 : 0.75;
             // Keep effect subtle on both so side items are readable
             final double enlargeFactor = isDesktop ? 0.1 : 0.15;
 

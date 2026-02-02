@@ -4,10 +4,10 @@ import 'package:medbh_portfolio/animated_shapes.dart';
 import 'package:medbh_portfolio/constants/app_colors.dart';
 import 'package:medbh_portfolio/description_section.dart';
 import 'package:medbh_portfolio/explore_button.dart';
-import 'package:medbh_portfolio/floating_chatbot_button.dart';
 import 'package:medbh_portfolio/header.dart';
 import 'package:medbh_portfolio/logo_tagline.dart';
 import 'package:medbh_portfolio/widgets/contact_section.dart';
+import 'package:medbh_portfolio/widgets/download_cv_button.dart';
 import 'package:medbh_portfolio/widgets/profile_image.dart';
 import 'package:medbh_portfolio/widgets/projects_section.dart';
 import 'package:medbh_portfolio/widgets/technologies_section.dart';
@@ -103,6 +103,7 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
     return Scaffold(
       backgroundColor: const Color(0xFF0A0F1A),
       body: SafeArea(
@@ -158,7 +159,25 @@ class _HomePageState extends State<HomePage>
                   // const SizedBox(height: 40), <-- Removed spacer
                   // const DescriptionSection(), <-- Removed from here
                   const SizedBox(height: 40),
-                  ExploreButton(onTap: () => scrollToSection(3)),
+                  Center(
+                    child: isMobile
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              ExploreButton(onTap: () => scrollToSection(3)),
+                              const SizedBox(height: 16),
+                              const DownloadCVButton(),
+                            ],
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ExploreButton(onTap: () => scrollToSection(3)),
+                              const SizedBox(width: 30),
+                              const DownloadCVButton(),
+                            ],
+                          ),
+                  ),
 
                   const SizedBox(height: 80),
                   SizedBox(

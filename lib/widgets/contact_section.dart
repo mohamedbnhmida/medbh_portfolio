@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medbh_portfolio/constants/app_colors.dart';
 import 'package:medbh_portfolio/constants/app_strings.dart';
+import 'package:http/http.dart' as http;
+import 'package:medbh_portfolio/services/toast_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ContactSection extends StatefulWidget {
@@ -16,51 +19,84 @@ class _ContactSectionState extends State<ContactSection> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _messageController = TextEditingController();
+  bool _isLoading = false;
 
   Future<void> _sendEmail() async {
     if (_formKey.currentState!.validate()) {
-      // NOTE: For true "Direct" sending without opening an email app,
-      // you need a service like EmailJS (client-side) or a backend.
-      // Below is the placeholder for EmailJS implementation:
-      /*
-      final response = await http.post(
-        Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'service_id': 'YOUR_SERVICE_ID',
-          'template_id': 'YOUR_TEMPLATE_ID',
-          'user_id': 'YOUR_PUBLIC_KEY',
-          'template_params': {
-            'user_name': _nameController.text,
-            'user_email': _emailController.text,
-            'message': _messageController.text,
-          }
-        }),
-      );
-      */
+      setState(() {
+        _isLoading = true;
+      });
 
-      // Fallback to mailto for now as placeholder
-      final Uri params = Uri(
-        scheme: 'mailto',
-        path: AppStrings.email,
-        query: _encodeQueryParameters(<String, String>{
-          'subject': 'Portfolio Contact: ${_nameController.text}',
-          'body':
-              '${_messageController.text}\n\nFrom: ${_emailController.text}',
-        }),
-      );
+      try {
+        // EmailJS implementation
+        // Create an account at emailjs.com to get these values
+        const serviceId = 'service_1gftue9';
+        const templateId = 'template_iadb884';
+        const publicKey = 'Av0g4ACLjsdnmeWZ3';
 
-      if (!await launchUrl(params)) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Could not open email client')),
+        // Check if user has updated the keys
+        if (serviceId.contains('service_') &&
+            templateId.contains('template_')) {
+          final response = await http.post(
+            Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({
+              'service_id': serviceId,
+              'template_id': templateId,
+              'user_id': publicKey,
+              'template_params': {
+                'title': 'Portfolio Message ',
+                'name': _nameController.text,
+                'email': _emailController.text,
+                'message': _messageController.text,
+                'time': DateTime.now().toString().substring(0, 16),
+                'reply_to': _emailController.text,
+              },
+            }),
           );
+
+          if (response.statusCode == 200) {
+            if (mounted) {
+              ToastService.showSuccess(context, 'Mail Sent Successfully!');
+              _formKey.currentState!.reset();
+              _nameController.clear();
+              _emailController.clear();
+              _messageController.clear();
+            }
+          } else {
+            throw Exception('Failed to send email: ${response.body}');
+          }
+        } else {
+          // Fallback to mailto if keys are not set correctly
+          final Uri params = Uri(
+            scheme: 'mailto',
+            path: AppStrings.email,
+            query: _encodeQueryParameters(<String, String>{
+              'subject': 'Portfolio Contact: ${_nameController.text}',
+              'body':
+                  '${_messageController.text}\n\nFrom: ${_emailController.text}',
+            }),
+          );
+
+          if (!await launchUrl(params)) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Could not open email client')),
+              );
+            }
+          }
         }
-      } else {
+      } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('Form submitted!')));
+          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
         }
       }
     }
@@ -141,7 +177,7 @@ class _ContactSectionState extends State<ContactSection> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _sendEmail,
+                    onPressed: _isLoading ? null : _sendEmail,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.floatingButtonBackground,
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -149,14 +185,23 @@ class _ContactSectionState extends State<ContactSection> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      "Send Message",
-                      style: GoogleFonts.orbitron(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            "Send Message",
+                            style: GoogleFonts.orbitron(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
               ],

@@ -11,28 +11,21 @@ class ExploreButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMobile = MediaQuery.of(context).size.width < 600;
 
-    return Center(
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.floatingButtonBackground,
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.symmetric(
-            horizontal: isMobile ? 24 : 40,
-            vertical: isMobile ? 12 : 20,
-          ),
-          elevation: 10,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-        ),
-        onPressed: onTap,
-        child: Text(
-          'Explore My Work',
-          style: GoogleFonts.orbitron(
-            fontSize: isMobile ? 15 : 18,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 1,
-          ),
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.floatingButtonBackground,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: 35, vertical: 20),
+        elevation: 10,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      ),
+      onPressed: onTap,
+      child: Text(
+        'Explore My Work',
+        style: GoogleFonts.orbitron(
+          fontSize: isMobile ? 15 : 18,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1,
         ),
       ),
     );
