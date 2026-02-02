@@ -1,35 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medbh_portfolio/animated_background.dart';
-import 'package:medbh_portfolio/animated_shapes.dart';
 import 'package:medbh_portfolio/home_page.dart';
+import 'package:medbh_portfolio/widgets/random_curves.dart';
 
 class LoadingScreen extends StatefulWidget {
   @override
   _LoadingScreenState createState() => _LoadingScreenState();
 }
 
-class _LoadingScreenState extends State<LoadingScreen> {
+class _LoadingScreenState extends State<LoadingScreen>
+    with TickerProviderStateMixin {
   bool _isInitialized = false;
+  late AnimationController _bgController;
 
   @override
   void initState() {
     super.initState();
+    _bgController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat();
     _initializeApp();
   }
 
   Future<void> _initializeApp() async {
-    // Wait for fonts to be ready
-    await GoogleFonts.pendingFonts();
+    try {
+      // Wait for fonts to be ready with a timeout
+      await GoogleFonts.pendingFonts().timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          debugPrint('Font loading timed out, continuing...');
+          return [];
+        },
+      );
+    } catch (e) {
+      debugPrint('Error loading fonts: $e');
+    }
 
-    // Simulate a small extra delay for aesthetic "loading" feel
-    await Future.delayed(const Duration(seconds: 5));
+    // Preload key assets
+    if (mounted) {
+      final assetsToPreload = [
+        'assets/icon.png',
+        'assets/flutter.png',
+        'assets/firebase.png',
+        'assets/apple.png',
+        'assets/playstore.png',
+      ];
+
+      for (var asset in assetsToPreload) {
+        precacheImage(AssetImage(asset), context);
+      }
+    }
+
+    // Ensure the loading animation is visible for a minimum amount of time
+    // to give a professional "initializing" feel.
+    await Future.delayed(const Duration(seconds: 3));
 
     if (mounted) {
       setState(() {
         _isInitialized = true;
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _bgController.dispose();
+    super.dispose();
   }
 
   @override
@@ -42,13 +80,13 @@ class _LoadingScreenState extends State<LoadingScreen> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          AnimatedBackground(),
+          AnimatedColorCyclingGradient(controller: _bgController),
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                AnimatedShapes(),
-                SizedBox(height: 30),
+                const RandomCurves(),
+                const SizedBox(height: 30),
                 Text(
                   'Initializing Portfolio...',
                   style: GoogleFonts.orbitron(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:medbh_portfolio/animated_color_cycling_gradient.dart';
+import 'package:medbh_portfolio/animated_background.dart';
 import 'package:medbh_portfolio/animated_shapes.dart';
 import 'package:medbh_portfolio/constants/app_colors.dart';
 import 'package:medbh_portfolio/description_section.dart';
@@ -19,7 +19,8 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+  late AnimationController _bgController;
   final ScrollController _scrollController = ScrollController();
 
   final GlobalKey _technologiesKey = GlobalKey();
@@ -32,6 +33,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _bgController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 50),
+    )..repeat();
 
     _scrollController.addListener(() {
       if (_scrollController.offset > 300 && !_showBackToTop) {
@@ -50,21 +55,42 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    _bgController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
   void scrollToSection(int index) {
     if (index == 0) {
-      _scrollController.animateTo(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     } else if (index == 1) {
-      _scrollController.animateTo(300, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      _scrollController.animateTo(
+        300,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     } else if (index == 2) {
-      Scrollable.ensureVisible(_technologiesKey.currentContext!, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      Scrollable.ensureVisible(
+        _technologiesKey.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     } else if (index == 3) {
-      Scrollable.ensureVisible(_projectsKey.currentContext!, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      Scrollable.ensureVisible(
+        _projectsKey.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     } else if (index == 4) {
-      Scrollable.ensureVisible(_contactKey.currentContext!, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
+      Scrollable.ensureVisible(
+        _contactKey.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
@@ -76,15 +102,17 @@ class _HomePageState extends State<HomePage> {
       body: SafeArea(
         child: Stack(
           children: [
-            AnimatedColorCyclingGradient(),
-            AnimatedShapes(),
+            AnimatedColorCyclingGradient(controller: _bgController),
+            AnimatedShapes(controller: _bgController),
             SingleChildScrollView(
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(height: MediaQuery.of(context).size.width < 600 ? 70 : 100),
+                  SizedBox(
+                    height: MediaQuery.of(context).size.width < 600 ? 70 : 100,
+                  ),
                   LayoutBuilder(
                     builder: (context, constraints) {
                       if (constraints.maxWidth > 800) {
@@ -140,7 +168,10 @@ class _HomePageState extends State<HomePage> {
                           ),
                   ),
                   const SizedBox(height: 80),
-                  SizedBox(key: _technologiesKey, child: const TechnologiesSection()),
+                  SizedBox(
+                    key: _technologiesKey,
+                    child: const TechnologiesSection(),
+                  ),
                   const SizedBox(height: 80),
                   SizedBox(key: _projectsKey, child: const ProjectsSection()),
                   const SizedBox(height: 80),
@@ -165,7 +196,10 @@ class _HomePageState extends State<HomePage> {
                 child: FloatingActionButton.small(
                   onPressed: () => scrollToSection(0),
                   backgroundColor: AppColors.floatingButtonBackground,
-                  child: const Icon(Icons.arrow_upward, color: AppColors.floatingButtonIcon),
+                  child: const Icon(
+                    Icons.arrow_upward,
+                    color: AppColors.floatingButtonIcon,
+                  ),
                 ),
               ),
           ],

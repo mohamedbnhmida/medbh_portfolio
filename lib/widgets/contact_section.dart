@@ -18,6 +18,7 @@ class _ContactSectionState extends State<ContactSection> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _subjectController = TextEditingController();
   final _messageController = TextEditingController();
   bool _isLoading = false;
 
@@ -45,7 +46,7 @@ class _ContactSectionState extends State<ContactSection> {
               'template_id': templateId,
               'user_id': publicKey,
               'template_params': {
-                'title': 'Portfolio Message ',
+                'subject': _subjectController.text,
                 'name': _nameController.text,
                 'email': _emailController.text,
                 'message': _messageController.text,
@@ -61,6 +62,7 @@ class _ContactSectionState extends State<ContactSection> {
               _formKey.currentState!.reset();
               _nameController.clear();
               _emailController.clear();
+              _subjectController.clear();
               _messageController.clear();
             }
           } else {
@@ -72,7 +74,8 @@ class _ContactSectionState extends State<ContactSection> {
             scheme: 'mailto',
             path: AppStrings.email,
             query: _encodeQueryParameters(<String, String>{
-              'subject': 'Portfolio Contact: ${_nameController.text}',
+              'subject':
+                  '${_subjectController.text} (from ${_nameController.text})',
               'body':
                   '${_messageController.text}\n\nFrom: ${_emailController.text}',
             }),
@@ -106,6 +109,7 @@ class _ContactSectionState extends State<ContactSection> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _subjectController.dispose();
     _messageController.dispose();
     super.dispose();
   }
@@ -163,6 +167,14 @@ class _ContactSectionState extends State<ContactSection> {
                   validator: (value) => value!.isEmpty || !value.contains('@')
                       ? "Please enter a valid email"
                       : null,
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _subjectController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: _inputDecoration("Subject"),
+                  validator: (value) =>
+                      value!.isEmpty ? "Please enter a subject" : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
