@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:medbh_portfolio/constants/app_colors.dart';
-import 'package:medbh_portfolio/constants/app_strings.dart';
+import 'package:google_fonts/google_fonts.dart'; 
 import 'package:medbh_portfolio/widgets/typing_text.dart';
 
 class LogoAndTagline extends StatelessWidget {

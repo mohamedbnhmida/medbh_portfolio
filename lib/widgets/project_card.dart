@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:medbh_portfolio/constants/app_colors.dart';
-import 'package:medbh_portfolio/constants/app_data.dart';
+import 'package:medbh_portfolio/constants/app_colors.dart'; 
 import 'package:medbh_portfolio/models/project_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
