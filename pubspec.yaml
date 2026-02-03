@@ -75,7 +75,9 @@ flutter:
     - assets/projects/digital_lib/ 
     - assets/projects/digital_lib/screenshots/
     - assets/projects/hlpro_mobile/ 
+    - assets/projects/hlpro_mobile/screenshots/
     - assets/projects/ilef_info_mobile/
+    - assets/projects/ilef_info_mobile/screenshots/
     - assets/projects/kalonet/ 
     - assets/projects/kalonet/screenshots/
     - assets/projects/lib_corporate/

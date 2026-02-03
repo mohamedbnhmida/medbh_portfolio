@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart'; 
+import 'package:google_fonts/google_fonts.dart';
 import 'package:medbh_portfolio/widgets/typing_text.dart';
 
 class LogoAndTagline extends StatelessWidget {
@@ -23,7 +23,7 @@ class LogoAndTagline extends StatelessWidget {
               "Software Engineer",
             ],
             style: GoogleFonts.orbitron(
-              fontSize: isMobile ? 22 : 42,
+              fontSize: isMobile ? 20 : 42,
               fontWeight: FontWeight.bold,
               color: Colors.white,
             ),

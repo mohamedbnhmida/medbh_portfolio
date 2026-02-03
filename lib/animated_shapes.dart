@@ -1,10 +1,11 @@
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
 class AnimatedShapes extends StatelessWidget {
   final AnimationController controller;
-  const AnimatedShapes({required this.controller});
+  final int? pointCount;
+  const AnimatedShapes({required this.controller, this.pointCount});
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +16,7 @@ class AnimatedShapes extends StatelessWidget {
           painter: VerySlowFluidConnectingDotsPainter(
             controller.value,
             MediaQuery.of(context).size,
+            count: pointCount,
           ),
           size: MediaQuery.of(context).size,
         );
@@ -26,13 +28,21 @@ class AnimatedShapes extends StatelessWidget {
 class VerySlowFluidConnectingDotsPainter extends CustomPainter {
   final double animationValue;
   final Size size;
+  final int? count;
+  late final List<Offset> _points;
 
-  static final List<Offset> _staticPoints = List.generate(
-    Random().nextInt(100),
-    (_) => Offset(Random().nextDouble(), Random().nextDouble()),
-  );
-
-  VerySlowFluidConnectingDotsPainter(this.animationValue, this.size);
+  VerySlowFluidConnectingDotsPainter(
+    this.animationValue,
+    this.size, {
+    this.count,
+  }) {
+    final random = math.Random(2); // Seed for consistency
+    final actualCount = count ?? 10;
+    _points = List.generate(
+      actualCount,
+      (_) => Offset(random.nextDouble(), random.nextDouble()),
+    );
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -41,16 +51,18 @@ class VerySlowFluidConnectingDotsPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     final linePaint = Paint()
-      ..color = Color.fromARGB(255, 20, 176, 233).withOpacity(0.1)
+      ..color = const Color.fromARGB(255, 20, 176, 233).withOpacity(0.1)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = Random().nextDouble() * 0.5 + 0.5;
+      ..strokeWidth = math.Random().nextDouble() * 0.5 + 0.5;
 
-    final List<Offset> animatedPoints = _staticPoints.map((p) {
+    final List<Offset> animatedPoints = _points.map((p) {
       final baseX = p.dx * size.width;
       final baseY = p.dy * size.height;
 
-      final dx = baseX + 100 * sin(animationValue * 2 * pi + p.dy * 100);
-      final dy = baseY + 220 * cos(animationValue * 2 * pi + p.dx * 30);
+      final dx =
+          baseX + 20 * math.sin(animationValue * 2 * math.pi + p.dy * 10);
+      final dy =
+          baseY + 120 * math.cos(animationValue * 2 * math.pi + p.dx * 10);
 
       return Offset(dx, dy);
     }).toList();

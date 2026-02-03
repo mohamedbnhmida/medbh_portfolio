@@ -48,6 +48,11 @@ class AppData {
       color: Color(0xFF00979D),
     ),
     TechnologyModel(
+      name: "Raspberry Pi",
+      assetPath: "assets/raspberry.png",
+      color: Color(0xFF00979D),
+    ),
+    TechnologyModel(
       name: "Python",
       assetPath: "assets/python.png",
       color: Color(0xFF3776AB),
@@ -120,6 +125,12 @@ class AppData {
       playStoreUrl:
           "https://play.google.com/store/apps/details?id=tn.ilefinfo.ilefinfo",
       appIcon: "assets/projects/ilef_info_mobile/icon.png",
+      screenshots: [
+        "assets/projects/ilef_info_mobile/screenshots/image1.png",
+        "assets/projects/ilef_info_mobile/screenshots/image2.png",
+        "assets/projects/ilef_info_mobile/screenshots/image3.png",
+        "assets/projects/ilef_info_mobile/screenshots/image4.png",
+      ],
       technologies: ["Flutter", "Dart", "Google Maps API"],
     ),
     ProjectModel(
@@ -127,6 +138,10 @@ class AppData {
       description:
           "AI-based optical fiber patchcord testing system using Deep Learning.",
       appIcon: "assets/projects/hlpro_mobile/icon.png",
+      screenshots: [
+        "assets/projects/hlpro_mobile/screenshots/image1.jpg",
+        "assets/projects/hlpro_mobile/screenshots/image2.jpg",
+      ],
       technologies: ["Flutter", "Python", "TensorFlow", "Raspberry Pi"],
     ),
     ProjectModel(

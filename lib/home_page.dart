@@ -103,7 +103,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: Stack(
           children: [
             AnimatedColorCyclingGradient(controller: _bgController),
-            AnimatedShapes(controller: _bgController),
+            AnimatedShapes(
+              controller: _bgController,
+              pointCount: isMobile ? 20 : 50,
+            ),
             SingleChildScrollView(
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 24.0),

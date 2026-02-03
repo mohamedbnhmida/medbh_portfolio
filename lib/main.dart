@@ -25,5 +25,5 @@ class PortfolioApp extends StatelessWidget {
       ),
       home: LoadingScreen(),
     );
-  }
+  } 
 }

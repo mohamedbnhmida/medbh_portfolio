@@ -87,14 +87,23 @@ class _LoadingScreenState extends State<LoadingScreen>
               children: [
                 const RandomCurves(),
                 const SizedBox(height: 30),
-                Text(
-                  'Initializing Portfolio...',
-                  style: GoogleFonts.orbitron(
-                    fontSize: 22,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                  ),
+                AnimatedBuilder(
+                  animation: _bgController,
+                  builder: (context, child) {
+                    final dotCount =
+                        (DateTime.now().millisecondsSinceEpoch / 500).floor() %
+                        4;
+                    final dots = '.' * dotCount;
+                    return Text(
+                      'Loading$dots',
+                      style: GoogleFonts.orbitron(
+                        fontSize: 20,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 2,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

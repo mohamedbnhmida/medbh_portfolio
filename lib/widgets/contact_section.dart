@@ -49,7 +49,8 @@ class _ContactSectionState extends State<ContactSection> {
                 'subject': _subjectController.text,
                 'name': _nameController.text,
                 'email': _emailController.text,
-                'message': _messageController.text,
+                'message':
+                    'Subject: ${_subjectController.text}\n\n${_messageController.text}',
                 'time': DateTime.now().toString().substring(0, 16),
                 'reply_to': _emailController.text,
               },
