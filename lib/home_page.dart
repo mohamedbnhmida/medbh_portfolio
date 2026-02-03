@@ -68,29 +68,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         curve: Curves.easeInOut,
       );
     } else if (index == 1) {
-      _scrollController.animateTo(
-        300,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
+      if (_technologiesKey.currentContext != null) {
+        Scrollable.ensureVisible(
+          _technologiesKey.currentContext!,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: 0.0,
+        );
+      }
     } else if (index == 2) {
-      Scrollable.ensureVisible(
-        _technologiesKey.currentContext!,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
+      if (_projectsKey.currentContext != null) {
+        Scrollable.ensureVisible(
+          _projectsKey.currentContext!,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: 0.0,
+        );
+      }
     } else if (index == 3) {
-      Scrollable.ensureVisible(
-        _projectsKey.currentContext!,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
-    } else if (index == 4) {
-      Scrollable.ensureVisible(
-        _contactKey.currentContext!,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-      );
+      if (_contactKey.currentContext != null) {
+        Scrollable.ensureVisible(
+          _contactKey.currentContext!,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: 0.0,
+        );
+      }
     }
   }
 
@@ -114,32 +117,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
-                    height: MediaQuery.of(context).size.width < 600 ? 70 : 100,
+                    height: MediaQuery.of(context).size.width < 600 ? 80 : 120,
                   ),
                   LayoutBuilder(
                     builder: (context, constraints) {
                       if (constraints.maxWidth > 800) {
-                        return const Row(
+                        return Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
+                                children: const [
                                   LogoAndTagline(),
                                   SizedBox(height: 40),
                                   DescriptionSection(),
                                 ],
                               ),
                             ),
-                            SizedBox(width: 40),
-                            ProfileImage(),
+                            const SizedBox(width: 40),
+                            const ProfileImage(),
                           ],
                         );
                       } else {
-                        return const Column(
+                        return Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
+                          children: const [
                             ProfileImage(),
                             SizedBox(height: 20),
                             LogoAndTagline(),
@@ -156,7 +159,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              ExploreButton(onTap: () => scrollToSection(3)),
+                              ExploreButton(onTap: () => scrollToSection(2)),
                               const SizedBox(height: 16),
                               const DownloadCVButton(),
                             ],
@@ -164,21 +167,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              ExploreButton(onTap: () => scrollToSection(3)),
+                              ExploreButton(onTap: () => scrollToSection(2)),
                               const SizedBox(width: 30),
                               const DownloadCVButton(),
                             ],
                           ),
                   ),
+                  const SizedBox(height: 100),
+                  SizedBox(key: _technologiesKey, height: 100),
+                  const TechnologiesSection(),
                   const SizedBox(height: 80),
-                  SizedBox(
-                    key: _technologiesKey,
-                    child: const TechnologiesSection(),
-                  ),
+                  SizedBox(key: _projectsKey, height: 100),
+                  const ProjectsSection(),
                   const SizedBox(height: 80),
-                  SizedBox(key: _projectsKey, child: const ProjectsSection()),
-                  const SizedBox(height: 80),
-                  SizedBox(key: _contactKey, child: const ContactSection()),
+                  SizedBox(key: _contactKey, height: 100),
+                  const ContactSection(),
                   const SizedBox(height: 60),
                 ],
               ),

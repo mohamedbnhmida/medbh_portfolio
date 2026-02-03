@@ -95,10 +95,9 @@ class DesktopHeader extends StatelessWidget {
 
 List<Widget> headerButtons(BuildContext context, Function(int) onNavTap) => [
   HeaderButton(text: 'Home', onTap: () => onNavTap(0)),
-  HeaderButton(text: 'About', onTap: () => onNavTap(1)),
-  HeaderButton(text: 'Tech', onTap: () => onNavTap(2)),
-  HeaderButton(text: 'Projects', onTap: () => onNavTap(3)),
-  HeaderButton(text: 'Contact', onTap: () => onNavTap(4)),
+  HeaderButton(text: 'Tech', onTap: () => onNavTap(1)),
+  HeaderButton(text: 'Projects', onTap: () => onNavTap(2)),
+  HeaderButton(text: 'Contact', onTap: () => onNavTap(3)),
   const FloatingSocialMediaBar(),
 ];
 
