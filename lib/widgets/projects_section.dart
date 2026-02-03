@@ -20,7 +20,6 @@ class ProjectsSection extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        const SizedBox(height: 30),
         LayoutBuilder(
           builder: (context, constraints) {
             // Distinct configurations for Mobile vs Desktop (Split View approach)
