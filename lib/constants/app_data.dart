@@ -171,5 +171,20 @@ class AppData {
       ],
       technologies: ["React Native", "Express.js", "MongoDB", "Expo"],
     ),
+
+    ProjectModel(
+      name: "Weefarm",
+      description: "Digital Farming Platform.",
+      appIcon: "assets/projects/weefarm/icon.png",
+      playStoreUrl:
+          "https://play.google.com/store/apps/details?id=com.weefarm.app",
+      screenshots: [
+        "assets/projects/weefarm/screenshots/image1.png",
+        "assets/projects/weefarm/screenshots/image2.png",
+        "assets/projects/weefarm/screenshots/image3.png",
+        "assets/projects/weefarm/screenshots/image4.png",
+      ],
+      technologies: ["Flutter", "Dart"],
+    ),
   ];
 }
