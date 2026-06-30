@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:medbh_portfolio/constants/app_colors.dart'; 
+import 'package:medbh_portfolio/constants/app_colors.dart';
 import 'package:medbh_portfolio/models/project_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -18,7 +18,6 @@ class _ProjectCardState extends State<ProjectCard> {
   int _currentImageIndex = 0;
   Timer? _timer;
 
-  // Placeholder images since we don't have real screenshots yet
   final List<String> _placeholderImages = ['assets/icon.png'];
 
   ImageProvider _getImageProvider(String path) {
@@ -26,16 +25,13 @@ class _ProjectCardState extends State<ProjectCard> {
   }
 
   List<String> get _images {
-    // Return real screenshots if available
     if (widget.project.screenshots != null &&
         widget.project.screenshots!.isNotEmpty) {
       return widget.project.screenshots!;
     }
-    // Fallback to app icon if available
     if (widget.project.appIcon != null) {
       return [widget.project.appIcon!];
     }
-    // Final fallback
     return _placeholderImages;
   }
 
@@ -44,10 +40,12 @@ class _ProjectCardState extends State<ProjectCard> {
         widget.project.screenshots!.isEmpty);
   }
 
+  bool get _isWebDesktop =>
+      widget.project.projectType == ProjectType.webDesktop;
+
   @override
   void initState() {
     super.initState();
-    // Use the getter for length check
     if (_images.length > 1) {
       _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
         if (mounted) {
@@ -102,8 +100,7 @@ class _ProjectCardState extends State<ProjectCard> {
                     color: _isUsingFallback ? Colors.white : Colors.black,
                     image: DecorationImage(
                       image: _getImageProvider(_images[_currentImageIndex]),
-                      fit: BoxFit
-                          .fill, // Using fill to force full height coverage as requested
+                      fit: BoxFit.fill,
                       alignment: Alignment.topCenter,
                     ),
                   ),
@@ -113,11 +110,11 @@ class _ProjectCardState extends State<ProjectCard> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withOpacity(
-                            _isUsingFallback ? 0.9 : 0.7,
+                          Colors.black.withValues(
+                            alpha: _isUsingFallback ? 0.9 : (_isWebDesktop ? 0.5 : 0.7),
                           ),
-                          Colors.black.withOpacity(
-                            _isUsingFallback ? 0.9 : 0.7,
+                          Colors.black.withValues(
+                            alpha: _isUsingFallback ? 0.9 : (_isWebDesktop ? 0.85 : 0.7),
                           ),
                         ],
                       ),
@@ -133,46 +130,53 @@ class _ProjectCardState extends State<ProjectCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header: Icon + Name
+                  // Header: Icon (mobile only) + Name
                   LayoutBuilder(
                     builder: (context, constraints) {
                       final isMobile = constraints.maxWidth < 400;
                       final iconSize = isMobile ? 45.0 : 60.0;
                       final titleSize = isMobile ? 16.0 : 20.0;
 
+                      if (_isWebDesktop) {
+                        return Text(
+                          widget.project.name,
+                          style: GoogleFonts.orbitron(
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        );
+                      }
+
                       return Row(
                         children: [
-                          Container(
-                            width: iconSize,
-                            height: iconSize,
-                            decoration: BoxDecoration(
-                              color:
-                                  Colors.white, // White background for the icon
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.white24),
-                              image: DecorationImage(
-                                image: widget.project.appIcon != null
-                                    ? _getImageProvider(widget.project.appIcon!)
-                                    : const AssetImage('assets/icon.png'),
-                                fit: BoxFit.cover,
+                          if (widget.project.appIcon != null)
+                            Container(
+                              width: iconSize,
+                              height: iconSize,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.white24),
+                                image: DecorationImage(
+                                  image: _getImageProvider(
+                                      widget.project.appIcon!),
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
+                          if (widget.project.appIcon != null)
+                            const SizedBox(width: 12),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.project.name,
-                                  style: GoogleFonts.orbitron(
-                                    fontSize: titleSize,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
+                            child: Text(
+                              widget.project.name,
+                              style: GoogleFonts.orbitron(
+                                fontSize: titleSize,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -231,10 +235,43 @@ class _ProjectCardState extends State<ProjectCard> {
 
                   const SizedBox(height: 24),
 
-                  // Store Badges
+                  // Store / Web Badges
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
+                      if (widget.project.webUrl != null)
+                        InkWell(
+                          onTap: () => _launchUrl(widget.project.webUrl!),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                  color: Colors.blueAccent.withValues(alpha: 0.6)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.language,
+                                    color: Colors.white70, size: 16),
+                                const SizedBox(width: 6),
+                                Text(
+                                  "Visit Website",
+                                  style: GoogleFonts.orbitron(
+                                    fontSize: 11,
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      if (widget.project.webUrl != null &&
+                          (widget.project.appStoreUrl != null ||
+                              widget.project.playStoreUrl != null))
+                        const SizedBox(width: 12),
                       if (widget.project.appStoreUrl != null)
                         InkWell(
                           onTap: () => _launchUrl(widget.project.appStoreUrl!),
@@ -259,7 +296,7 @@ class _ProjectCardState extends State<ProjectCard> {
                   ),
 
                   const SizedBox(height: 10),
-                  // Paging Indicator (Simple Dots)
+                  // Paging Indicator
                   if (_images.length > 1)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
