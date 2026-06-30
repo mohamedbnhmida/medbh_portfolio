@@ -6,7 +6,7 @@ class DownloadCVButton extends StatelessWidget {
   const DownloadCVButton({super.key});
 
   Future<void> _downloadCV() async {
-    final Uri url = Uri.parse('assets/MohamedBenHmida_ATS_CV_EN.pdf');
+    final Uri url = Uri.parse('assets/assets/MohamedBenHmida_ATS_CV_EN.pdf');
     if (!await launchUrl(url)) {
       // In web, assets can usually be opened via the relative path
       // If it fails, we can try to show an error message
