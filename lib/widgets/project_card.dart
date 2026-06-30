@@ -47,7 +47,7 @@ class _ProjectCardState extends State<ProjectCard> {
   void initState() {
     super.initState();
     if (_images.length > 1) {
-      _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _timer = Timer.periodic(const Duration(seconds: 10), (timer) {
         if (mounted) {
           setState(() {
             _currentImageIndex = (_currentImageIndex + 1) % _images.length;
@@ -70,9 +70,23 @@ class _ProjectCardState extends State<ProjectCard> {
     }
   }
 
+  void _openCarousel(BuildContext context) {
+    if (_images.length <= 1 && _isUsingFallback) return;
+    showDialog(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: 0.85),
+      builder: (_) => _FullscreenCarousel(
+        images: _images,
+        initialIndex: _currentImageIndex,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => _openCarousel(context),
+      child: Container(
       margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
       decoration: BoxDecoration(
         color: AppColors.cardBackground,
@@ -317,6 +331,164 @@ class _ProjectCardState extends State<ProjectCard> {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    ),
+    );
+  }
+}
+
+class _FullscreenCarousel extends StatefulWidget {
+  final List<String> images;
+  final int initialIndex;
+
+  const _FullscreenCarousel({required this.images, required this.initialIndex});
+
+  @override
+  State<_FullscreenCarousel> createState() => _FullscreenCarouselState();
+}
+
+class _FullscreenCarouselState extends State<_FullscreenCarousel> {
+  late int _index;
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _index = widget.initialIndex;
+    _pageController = PageController(initialPage: _index);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _go(int delta) {
+    final next = (_index + delta).clamp(0, widget.images.length - 1);
+    _pageController.animateToPage(
+      next,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: EdgeInsets.zero,
+      child: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
+        child: Stack(
+          children: [
+            // Full-screen page view
+            PageView.builder(
+              controller: _pageController,
+              itemCount: widget.images.length,
+              onPageChanged: (i) => setState(() => _index = i),
+              itemBuilder: (_, i) => InteractiveViewer(
+                child: Center(
+                  child: Image(
+                    image: AssetImage(widget.images[i]),
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+
+            // Close button
+            Positioned(
+              top: 16,
+              right: 16,
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 20),
+                ),
+              ),
+            ),
+
+            // Left arrow
+            if (_index > 0)
+              Positioned(
+                left: 12,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () => _go(-1),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: const Icon(Icons.chevron_left,
+                          color: Colors.white, size: 28),
+                    ),
+                  ),
+                ),
+              ),
+
+            // Right arrow
+            if (_index < widget.images.length - 1)
+              Positioned(
+                right: 12,
+                top: 0,
+                bottom: 0,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: () => _go(1),
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.6),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: const Icon(Icons.chevron_right,
+                          color: Colors.white, size: 28),
+                    ),
+                  ),
+                ),
+              ),
+
+            // Dot indicators
+            if (widget.images.length > 1)
+              Positioned(
+                bottom: 24,
+                left: 0,
+                right: 0,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(widget.images.length, (i) {
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: _index == i ? 16 : 8,
+                      height: 8,
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color: _index == i ? Colors.white : Colors.white38,
+                      ),
+                    );
+                  }),
+                ),
+              ),
           ],
         ),
       ),

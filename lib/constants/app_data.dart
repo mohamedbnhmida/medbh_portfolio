@@ -175,6 +175,7 @@ class AppData {
       name: "ASWAN",
       description: "Online commerce and wholesale app.",
       appStoreUrl: "https://apps.apple.com/us/app/aswan-/id6741357149",
+      playStoreUrl: "https://play.google.com/store/apps/details?id=asph.shop.aswan",
       appIcon: "assets/projects/aswan/icon.png",
       screenshots: [
         "assets/projects/aswan/screenshots/image1.png",
