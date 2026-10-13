@@ -20,7 +20,7 @@ class ResponsiveHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth < 900) {
+        if (constraints.maxWidth < 1150) {
           return MobileHeader(onNavTap: onNavTap, isScrolled: isScrolled);
         } else {
           return DesktopHeader(onNavTap: onNavTap, isScrolled: isScrolled);
@@ -96,8 +96,9 @@ class DesktopHeader extends StatelessWidget {
 List<Widget> headerButtons(BuildContext context, Function(int) onNavTap) => [
   HeaderButton(text: 'Home', onTap: () => onNavTap(0)),
   HeaderButton(text: 'Tech', onTap: () => onNavTap(1)),
-  HeaderButton(text: 'Projects', onTap: () => onNavTap(2)),
-  HeaderButton(text: 'Contact', onTap: () => onNavTap(3)),
+  HeaderButton(text: 'Experience', onTap: () => onNavTap(2)),
+  HeaderButton(text: 'Reviews', onTap: () => onNavTap(4)),
+  HeaderButton(text: 'Contact', onTap: () => onNavTap(5)),
   const FloatingSocialMediaBar(),
 ];
 
@@ -159,7 +160,7 @@ class _MobileHeaderState extends State<MobileHeader> {
                           ),
                         ),
                         Text(
-                          'MyPortfolio',
+                          'Mohamed Ben Hmida',
                           style: GoogleFonts.orbitron(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,

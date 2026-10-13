@@ -1,3 +1,5 @@
+import 'package:medbh_portfolio/services/content_store.dart';
+import 'package:medbh_portfolio/floating_chatbot_button.dart';
 import 'package:flutter/material.dart';
 import 'package:medbh_portfolio/animated_background.dart';
 import 'package:medbh_portfolio/animated_shapes.dart';
@@ -8,8 +10,10 @@ import 'package:medbh_portfolio/header.dart';
 import 'package:medbh_portfolio/logo_tagline.dart';
 import 'package:medbh_portfolio/widgets/contact_section.dart';
 import 'package:medbh_portfolio/widgets/download_cv_button.dart';
+import 'package:medbh_portfolio/widgets/experience_section.dart';
 import 'package:medbh_portfolio/widgets/profile_image.dart';
 import 'package:medbh_portfolio/widgets/projects_section.dart';
+import 'package:medbh_portfolio/widgets/reviews_section.dart';
 import 'package:medbh_portfolio/widgets/technologies_section.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,7 +28,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
 
   final GlobalKey _technologiesKey = GlobalKey();
+  final GlobalKey _experienceKey = GlobalKey();
   final GlobalKey _projectsKey = GlobalKey();
+  final GlobalKey _reviewsKey = GlobalKey();
   final GlobalKey _contactKey = GlobalKey();
 
   bool _showBackToTop = false;
@@ -33,6 +39,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    ContentStore.instance.addListener(_onContent);
     _bgController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 50),
@@ -53,10 +60,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
+  // Firestore content arrived: rebuild so every section picks it up.
+  void _onContent() => setState(() {});
+
   @override
   void dispose() {
     _bgController.dispose();
     _scrollController.dispose();
+    ContentStore.instance.removeListener(_onContent);
     super.dispose();
   }
 
@@ -77,6 +88,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         );
       }
     } else if (index == 2) {
+      if (_experienceKey.currentContext != null) {
+        Scrollable.ensureVisible(
+          _experienceKey.currentContext!,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: 0.0,
+        );
+      }
+    } else if (index == 3) {
       if (_projectsKey.currentContext != null) {
         Scrollable.ensureVisible(
           _projectsKey.currentContext!,
@@ -85,7 +105,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           alignment: 0.0,
         );
       }
-    } else if (index == 3) {
+    } else if (index == 4) {
+      if (_reviewsKey.currentContext != null) {
+        Scrollable.ensureVisible(
+          _reviewsKey.currentContext!,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+          alignment: 0.0,
+        );
+      }
+    } else if (index == 5) {
       if (_contactKey.currentContext != null) {
         Scrollable.ensureVisible(
           _contactKey.currentContext!,
@@ -114,6 +143,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
+                key: ValueKey(ContentStore.instance.version), // remount sections with new content
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
@@ -159,7 +189,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              ExploreButton(onTap: () => scrollToSection(2)),
+                              ExploreButton(onTap: () => scrollToSection(1)),
                               const SizedBox(height: 16),
                               const DownloadCVButton(),
                             ],
@@ -167,7 +197,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              ExploreButton(onTap: () => scrollToSection(2)),
+                              ExploreButton(onTap: () => scrollToSection(1)),
                               const SizedBox(width: 30),
                               const DownloadCVButton(),
                             ],
@@ -177,8 +207,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   SizedBox(key: _technologiesKey, height: 100),
                   const TechnologiesSection(),
                   const SizedBox(height: 80),
-                  SizedBox(key: _projectsKey, height: 100),
-                  const ProjectsSection(),
+                  SizedBox(key: _experienceKey, height: 100),
+                  const ExperienceSection(),
+                  const SizedBox(height: 80),
+                  SizedBox(key: _projectsKey, height: 0),
+                  const SizedBox(height: 0),
+                  SizedBox(key: _reviewsKey, height: 100),
+                  const ReviewsSection(),
                   const SizedBox(height: 80),
                   SizedBox(key: _contactKey, height: 100),
                   const ContactSection(),
@@ -197,7 +232,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
             if (_showBackToTop)
               Positioned(
-                bottom: 45,
+                bottom: 96, // above the chatbot button
                 right: 24,
                 child: FloatingActionButton.small(
                   onPressed: () => scrollToSection(0),
@@ -208,6 +243,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
                 ),
               ),
+            const Positioned.fill(child: FloatingChatBotButton()),
           ],
         ),
       ),
