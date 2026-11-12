@@ -15,7 +15,7 @@ class ToastService {
   static void _showToast(
     BuildContext context,
     String message,
-    IconData icon,
+    FaIconData icon,
     Color color,
   ) {
     final overlay = Overlay.of(context);
@@ -36,7 +36,7 @@ class ToastService {
 
 class _ToastWidget extends StatefulWidget {
   final String message;
-  final IconData icon;
+  final FaIconData icon;
   final Color color;
   final VoidCallback onDismiss;
 
@@ -156,7 +156,7 @@ class _ToastWidgetState extends State<_ToastWidget>
 }
 
 class _AnimatedIcon extends StatefulWidget {
-  final IconData icon;
+  final FaIconData icon;
   final Color color;
 
   const _AnimatedIcon({required this.icon, required this.color});
@@ -193,7 +193,7 @@ class _AnimatedIconState extends State<_AnimatedIcon>
   Widget build(BuildContext context) {
     return ScaleTransition(
       scale: _scaleAnimation,
-      child: Icon(widget.icon, color: widget.color, size: 24),
+      child: FaIcon(widget.icon, color: widget.color, size: 24),
     );
   }
 }

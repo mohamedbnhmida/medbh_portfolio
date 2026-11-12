@@ -1,10 +1,11 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:medbh_portfolio/constants/app_colors.dart';
-import 'package:medbh_portfolio/constants/app_strings.dart';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:medbh_portfolio/services/worker_api.dart';
 import 'package:medbh_portfolio/services/toast_service.dart';
+import 'package:medbh_portfolio/services/content_store.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ContactSection extends StatefulWidget {
@@ -29,51 +30,31 @@ class _ContactSectionState extends State<ContactSection> {
       });
 
       try {
-        // EmailJS implementation
-        // Create an account at emailjs.com to get these values
-        const serviceId = 'service_1gftue9';
-        const templateId = 'template_iadb884';
-        const publicKey = 'Av0g4ACLjsdnmeWZ3';
-
-        // Check if user has updated the keys
-        if (serviceId.contains('service_') &&
-            templateId.contains('template_')) {
-          final response = await http.post(
-            Uri.parse('https://api.emailjs.com/api/v1.0/email/send'),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({
-              'service_id': serviceId,
-              'template_id': templateId,
-              'user_id': publicKey,
-              'template_params': {
-                'subject': _subjectController.text,
-                'name': _nameController.text,
-                'email': _emailController.text,
-                'message':
-                    'Subject: ${_subjectController.text}\n\n${_messageController.text}',
-                'time': DateTime.now().toString().substring(0, 16),
-                'reply_to': _emailController.text,
-              },
-            }),
-          );
-
-          if (response.statusCode == 200) {
-            if (mounted) {
-              ToastService.showSuccess(context, 'Mail Sent Successfully!');
-              _formKey.currentState!.reset();
-              _nameController.clear();
-              _emailController.clear();
-              _subjectController.clear();
-              _messageController.clear();
-            }
-          } else {
-            throw Exception('Failed to send email: ${response.body}');
+        // Sent by the portfolio worker (chat_worker/) through Brevo; the key stays server-side.
+        final res = await http.post(
+          Uri.parse('${WorkerApi.baseUrl}/contact'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'name': _nameController.text.trim(),
+            'email': _emailController.text.trim(),
+            'subject': _subjectController.text.trim(),
+            'message': _messageController.text.trim(),
+          }),
+        );
+        if (res.statusCode == 200) {
+          if (mounted) {
+            ToastService.showSuccess(context, 'Mail Sent Successfully!');
+            _formKey.currentState!.reset();
+            _nameController.clear();
+            _emailController.clear();
+            _subjectController.clear();
+            _messageController.clear();
           }
         } else {
-          // Fallback to mailto if keys are not set correctly
+          // Worker unavailable: fall back to the visitor's mail app
           final Uri params = Uri(
             scheme: 'mailto',
-            path: AppStrings.email,
+            path: ContentStore.instance.email,
             query: _encodeQueryParameters(<String, String>{
               'subject':
                   '${_subjectController.text} (from ${_nameController.text})',
@@ -121,7 +102,7 @@ class _ContactSectionState extends State<ContactSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          AppStrings.contactTitle,
+          ContentStore.instance.contactTitle,
           style: GoogleFonts.orbitron(
             fontSize: MediaQuery.of(context).size.width < 600 ? 22 : 28,
             color: Colors.white,

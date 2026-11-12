@@ -1,4 +1,6 @@
 import 'dart:math';
+import 'package:medbh_portfolio/services/content_store.dart';
+import 'package:medbh_portfolio/widgets/app_image.dart';
 import 'package:flutter/material.dart';
 
 class ProfileImage extends StatefulWidget {
@@ -46,7 +48,10 @@ class _ProfileImageState extends State<ProfileImage>
             padding: const EdgeInsets.all(1), // Space for the border
             child: ClipPath(
               clipper: OrganicBlobClipper(animationValue: _controller.value),
-              child: Image.asset('assets/icon.png', fit: BoxFit.cover),
+              child: Image(
+                image: appImageProvider(ContentStore.instance.photoUrl),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         );

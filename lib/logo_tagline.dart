@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:medbh_portfolio/services/content_store.dart';
 import 'package:medbh_portfolio/widgets/typing_text.dart';
 
 class LogoAndTagline extends StatelessWidget {
@@ -17,11 +18,7 @@ class LogoAndTagline extends StatelessWidget {
               ? 50
               : 120, // Reduced height on mobile to minimize space below animation
           child: TypingText(
-            texts: const [
-              "Mohamed Ben Hmida",
-              "Mobile & Web Developer",
-              "Software Engineer",
-            ],
+            texts: ContentStore.instance.taglines,
             style: GoogleFonts.orbitron(
               fontSize: isMobile ? 20 : 42,
               fontWeight: FontWeight.bold,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:medbh_portfolio/constants/app_strings.dart';
+import 'package:medbh_portfolio/services/content_store.dart';
 
 class DescriptionSection extends StatelessWidget {
   const DescriptionSection({super.key});
@@ -24,7 +24,7 @@ class DescriptionSection extends StatelessWidget {
         Padding(
           padding: EdgeInsets.only(right: isMobile ? 0 : 24),
           child: Text(
-            AppStrings.aboutMe,
+            ContentStore.instance.aboutMe,
             style: GoogleFonts.orbitron(
               color: Colors.white70,
               fontSize: isMobile ? 14 : 16, // Reduced for mobile

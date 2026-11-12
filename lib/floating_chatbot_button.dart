@@ -1,197 +1,364 @@
 import 'dart:convert';
 import 'dart:math';
 
-import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:medbh_portfolio/chatbot/knowledge_base.dart';
 import 'package:medbh_portfolio/constants/app_colors.dart';
+import 'package:medbh_portfolio/services/worker_api.dart';
+
+/// Portfolio assistant: instant ready answers from [KnowledgeBase] (CV + portfolio data);
+/// anything else goes to the chat worker (chat_worker/), which asks Claude using the profile
+/// as context. No API key in the client.
 
 class FloatingChatBotButton extends StatefulWidget {
+  const FloatingChatBotButton({super.key});
+
   @override
-  _FloatingChatBotButtonState createState() => _FloatingChatBotButtonState();
+  State<FloatingChatBotButton> createState() => _FloatingChatBotButtonState();
 }
 
 class _FloatingChatBotButtonState extends State<FloatingChatBotButton>
     with SingleTickerProviderStateMixin {
   bool _isOpen = false;
-  bool _isMaximized = false;
-  List<Map<String, dynamic>> _chatMessages = [];
-  TextEditingController _textController = TextEditingController();
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
+  final _messages = <({bool isUser, String text})>[
+    (isUser: false, text: KnowledgeBase.greeting),
+  ];
+  final _textController = TextEditingController();
+  final _scrollController = ScrollController();
+  bool _typing = false;
+  final _session = DateTime.now().microsecondsSinceEpoch.toRadixString(
+    36,
+  ); // groups one visitor's chat
+  late final AnimationController _anim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 250),
+  );
 
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: Duration(milliseconds: 250),
-    );
-    _scaleAnimation = CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    );
+  void _toggle() {
+    setState(() => _isOpen = !_isOpen);
+    _isOpen ? _anim.forward() : _anim.reverse();
   }
 
-  void _toggleChat() {
+  Future<void> _ask(String raw) async {
+    final text = raw.trim();
+    if (text.isEmpty || _typing) return;
+    _textController.clear();
     setState(() {
-      _isOpen = !_isOpen;
-      _isOpen ? _animationController.forward() : _animationController.reverse();
+      _messages.add((isUser: true, text: text));
+      _typing = true;
     });
+    _scrollToEnd();
+    // Gemini (via the worker) understands any phrasing; ready answers are the offline fallback.
+    final reply =
+        await _askModel() ??
+        KnowledgeBase.answer(text) ??
+        KnowledgeBase.fallback;
+    _logChat(text, reply);
+    if (!mounted) return;
+    setState(() {
+      _typing = false;
+      _messages.add((isUser: false, text: reply));
+    });
+    _scrollToEnd();
   }
 
-  void _sendMessage() async {
-    final text = _textController.text.trim();
-    if (text.isEmpty) return;
-
-    setState(() {
-      _chatMessages.add({"sender": "user", "message": text});
-      _textController.clear();
-      _chatMessages.add({"sender": "bot", "message": "typing"});
-    });
-
+  /// Sends the recent conversation (greeting excluded) to the chat worker; null if it's unreachable.
+  Future<String?> _askModel() async {
+    final history = [
+      for (final m in _messages.skip(1))
+        {'role': m.isUser ? 'user' : 'assistant', 'content': m.text},
+    ];
     try {
-      // Check for custom response first
-      final lowerText = text.toLowerCase();
-      String reply;
-
-      if (lowerText.contains("your name") ||
-          lowerText.contains("who are you")) {
-        reply = "My name is Mohamed Ben Hmida ";
-      } else if (lowerText.contains("hello") || lowerText.contains("hi")) {
-        reply = "Hello! I'm  your assistant. How can I help you today?";
-      } else if (lowerText.contains("how are you")) {
-        reply = "I'm doing great! I'am always ready to help 💪";
-      } else {
-        // Otherwise send to Gemini
-        reply = await sendToGemini(text);
-      }
-
-      setState(() {
-        _chatMessages.removeLast(); // remove "typing"
-        _chatMessages.add({"sender": "bot", "message": reply});
-      });
-    } catch (e) {
-      setState(() {
-        _chatMessages.removeLast(); // remove "typing"
-        _chatMessages.add({
-          "sender": "bot",
-          "message": "Sorry, something went wrong.",
-        });
-      });
+      final res = await http
+          .post(
+            Uri.parse('${WorkerApi.baseUrl}/chat'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'messages': history}),
+          )
+          .timeout(const Duration(seconds: 30));
+      if (res.statusCode != 200) return null;
+      final reply = (jsonDecode(res.body) as Map<String, dynamic>)['reply'];
+      return reply is String && reply.isNotEmpty ? reply : null;
+    } catch (_) {
+      return null;
     }
   }
 
-  Future<String> sendToGemini(String userMessage) async {
-    const apiKey = 'AIzaSyBPWTX1I4Qbc4Tr_25hALPs6kRGSGXULg8';
-    final url = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey',
-    );
-
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        "contents": [
-          {
-            "parts": [
-              {"text": userMessage},
-            ],
-          },
-        ],
-      }),
-    );
-
-    final json = jsonDecode(response.body);
-
-    if (response.statusCode != 200 || json['candidates'] == null) {
-      final error = json['error']?['message'] ?? 'Unknown error';
-      throw Exception('Gemini API Error: $error');
-    }
-
-    return json['candidates'][0]['content']['parts'][0]['text'];
+  /// Saves the exchange to Firestore `chats` (add-only; readable in the Firebase console).
+  void _logChat(String question, String answer) {
+    FirebaseFirestore.instance
+        .collection('chats')
+        .add({
+          'at': FieldValue.serverTimestamp(),
+          'session': _session,
+          'question': question.length > 800
+              ? question.substring(0, 800)
+              : question,
+          'answer': answer.length > 4000 ? answer.substring(0, 4000) : answer,
+        })
+        .then((_) {}, onError: (_) {}); // never break the chat
   }
 
-  Widget _buildTypingIndicator() {
-    return TweenAnimationBuilder(
-      duration: Duration(seconds: 1),
-      tween: Tween<double>(begin: 0, end: 2 * pi),
-      builder: (context, double angle, child) {
-        return Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: List.generate(3, (index) {
-              final yOffset = sin(angle + (index * pi / 3)) * 4;
-              return Container(
-                margin: EdgeInsets.symmetric(horizontal: 2),
-                width: 6,
-                height: 6,
-                transform: Matrix4.translationValues(0, yOffset, 0),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-              );
-            }),
+  void _scrollToEnd() => WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    }
+  });
+
+  /// Renders **bold** segments.
+  Widget _richText(String text, Color color) {
+    final spans = <TextSpan>[];
+    final parts = text.split('**');
+    for (var i = 0; i < parts.length; i++) {
+      spans.add(
+        TextSpan(
+          text: parts[i],
+          style: TextStyle(
+            fontWeight: i.isOdd ? FontWeight.w700 : FontWeight.w400,
           ),
-        );
-      },
+        ),
+      );
+    }
+    return SelectableText.rich(
+      TextSpan(
+        style: TextStyle(color: color, fontSize: 13.5, height: 1.45),
+        children: spans,
+      ),
     );
   }
 
-  Widget _buildMessageBubble(Map<String, dynamic> message) {
-    final isUser = message["sender"] == "user";
-    final isTyping = message["message"] == "typing";
-    final bubbleColor = isUser ? Colors.blue : Colors.grey[700];
-    final alignment = isUser ? Alignment.centerRight : Alignment.centerLeft;
-    final icon = isUser ? Icons.person : Icons.smart_toy;
-    final borderRadius = BorderRadius.only(
-      topLeft: Radius.circular(12),
-      topRight: Radius.circular(12),
-      bottomLeft: isUser ? Radius.circular(12) : Radius.zero,
-      bottomRight: isUser ? Radius.zero : Radius.circular(12),
-    );
-
+  Widget _bubble(({bool isUser, String text}) m) {
+    final r = const Radius.circular(16);
     return Align(
-      alignment: alignment,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: isUser
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        children: [
-          if (!isUser)
-            Padding(
-              padding: const EdgeInsets.only(right: 6),
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(icon, color: Colors.grey[700]),
+      alignment: m.isUser ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 300),
+        margin: const EdgeInsets.symmetric(vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: m.isUser
+              ? const LinearGradient(
+                  colors: [Color(0xFF2F6BFF), Color(0xFF00B4FF)],
+                )
+              : null,
+          color: m.isUser ? null : Colors.white.withValues(alpha: 0.08),
+          border: m.isUser ? null : Border.all(color: AppColors.borderSubtle),
+          borderRadius: BorderRadius.only(
+            topLeft: r,
+            topRight: r,
+            bottomLeft: m.isUser ? r : Radius.zero,
+            bottomRight: m.isUser ? Radius.zero : r,
+          ),
+        ),
+        child: _richText(m.text, Colors.white),
+      ),
+    );
+  }
+
+  Widget _typingDots() => Align(
+    alignment: Alignment.centerLeft,
+    child: Container(
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 2 * pi),
+        duration: const Duration(seconds: 1),
+        onEnd: () => setState(() {}),
+        builder: (_, a, __) => Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(
+            3,
+            (i) => Container(
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              width: 6,
+              height: 6,
+              transform: Matrix4.translationValues(
+                0,
+                sin(a + i * pi / 3) * 3,
+                0,
               ),
-            ),
-          Flexible(
-            child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: bubbleColor,
-                borderRadius: borderRadius,
+              decoration: const BoxDecoration(
+                color: Colors.white70,
+                shape: BoxShape.circle,
               ),
-              child: isTyping
-                  ? _buildTypingIndicator()
-                  : SelectableText(
-                      message["message"],
-                      style: TextStyle(color: Colors.white),
-                    ),
             ),
           ),
-          if (isUser)
-            Padding(
-              padding: const EdgeInsets.only(left: 6),
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(icon, color: Colors.blue),
+        ),
+      ),
+    ),
+  );
+
+  Widget _chips() => SizedBox(
+    height: 36,
+    child: ListView(
+      scrollDirection: Axis.horizontal,
+      children: [
+        for (final s in KnowledgeBase.suggestions)
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: ActionChip(
+              label: Text(
+                s,
+                style: const TextStyle(color: Colors.white, fontSize: 12),
               ),
+              backgroundColor: AppColors.accent.withValues(alpha: 0.15),
+              side: BorderSide(color: AppColors.borderAccent),
+              shape: const StadiumBorder(),
+              onPressed: () => _ask(s),
             ),
+          ),
+      ],
+    ),
+  );
+
+  Widget _panel(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    return Container(
+      width: min(400, size.width - 24),
+      height: min(600, size.height - 100),
+      decoration: BoxDecoration(
+        color: const Color(0xF20D1526),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.borderAccent),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.accent.withValues(alpha: 0.25),
+            blurRadius: 30,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          // header
+          Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF2F6BFF), Color(0xFF00B4FF)],
+              ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(21)),
+            ),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  radius: 18,
+                  backgroundColor: Colors.white,
+                  child: Icon(
+                    Icons.smart_toy_rounded,
+                    color: Color(0xFF2F6BFF),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Mohamed's Assistant",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 4,
+                            backgroundColor: Color(0xFF4ADE80),
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            'Online · AI assistant',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  onPressed: _toggle,
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(14),
+              children: [
+                for (final m in _messages) _bubble(m),
+                if (_typing) _typingDots(),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+            child: _chips(),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 0, 8, 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _textController,
+                    onSubmitted: _ask,
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Ask about experience, skills, projects…',
+                      hintStyle: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 13,
+                      ),
+                      filled: true,
+                      fillColor: Colors.white.withValues(alpha: 0.07),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide(color: AppColors.borderSubtle),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: const BorderSide(color: AppColors.accent),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                IconButton.filled(
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.accent,
+                  ),
+                  icon: const Icon(
+                    Icons.send_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  onPressed: () => _ask(_textController.text),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -203,131 +370,29 @@ class _FloatingChatBotButtonState extends State<FloatingChatBotButton>
       children: [
         if (_isOpen)
           Positioned(
-            bottom: 10,
-            right: 10,
+            bottom: 16,
+            right: 12,
             child: ScaleTransition(
-              scale: _scaleAnimation,
-              child: GestureDetector(
-                onTap: () {},
-                child: Container(
-                  width: _isMaximized
-                      ? MediaQuery.of(context).size.width * 0.9
-                      : min(400, MediaQuery.of(context).size.width * 0.9),
-                  height: _isMaximized
-                      ? MediaQuery.of(context).size.height * 0.8
-                      : 600,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.black38,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black54,
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Chat Bot',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                          Spacer(),
-                          IconButton(
-                            icon: Icon(
-                              _isMaximized
-                                  ? Icons.fullscreen_exit
-                                  : Icons.fullscreen,
-                              color: Colors.white,
-                            ),
-                            onPressed: () {
-                              setState(() {
-                                _isMaximized = !_isMaximized;
-                              });
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.close, color: Colors.white),
-                            onPressed: _toggleChat,
-                          ),
-                        ],
-                      ),
-                      Divider(color: Colors.white24),
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: _chatMessages.length,
-                          itemBuilder: (context, index) {
-                            return _buildMessageBubble(_chatMessages[index]);
-                          },
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _textController,
-                              onSubmitted: (_) => _sendMessage(),
-                              style: TextStyle(color: Colors.white),
-                              decoration: InputDecoration(
-                                hintText: "Type your message...",
-                                hintStyle: const TextStyle(
-                                  color: Colors.white70,
-                                ),
-                                filled: true,
-                                fillColor: Colors.white.withOpacity(0.1),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: BorderSide(
-                                    color: AppColors.borderSubtle,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: BorderSide(
-                                    color: AppColors.borderSubtle,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: const BorderSide(
-                                    color: AppColors.accent,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.send, color: Colors.blue),
-                            onPressed: _sendMessage,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              scale: CurvedAnimation(parent: _anim, curve: Curves.easeOutBack),
+              alignment: Alignment.bottomRight,
+              child: _panel(context),
             ),
           ),
         if (!_isOpen)
           Positioned(
-            bottom: 30,
+            bottom: 24,
             right: 20,
-            child: FloatingActionButton(
-              onPressed: _toggleChat,
+            child: FloatingActionButton.extended(
+              onPressed: _toggle,
               backgroundColor: AppColors.floatingButtonBackground,
-              child: Icon(Icons.chat),
+              icon: const Icon(Icons.chat_bubble_rounded, color: Colors.white),
+              label: const Text(
+                'Ask me',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
       ],
@@ -337,7 +402,8 @@ class _FloatingChatBotButtonState extends State<FloatingChatBotButton>
   @override
   void dispose() {
     _textController.dispose();
-    _animationController.dispose();
+    _scrollController.dispose();
+    _anim.dispose();
     super.dispose();
   }
 }

@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // The dashboard login (Firebase Auth email/password). Change here to use another admin email.
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'mohamed1995176@gmail.com';
+    }
+
+    // Portfolio content: public read, edited only from the dashboard.
+    match /projects/{id}       { allow read: if true; allow write: if isAdmin(); }
+    match /experiences/{id}    { allow read: if true; allow write: if isAdmin(); }
+    match /education/{id}      { allow read: if true; allow write: if isAdmin(); }
+    match /certifications/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /settings/{id}       { allow read: if true; allow write: if isAdmin(); }
+    match /technologies/{id}   { allow read: if true; allow write: if isAdmin(); }
+
+    // Reviews: visitors submit as "pending"; only approved ones are public; the admin moderates.
+    match /reviews/{id} {
+      allow read: if resource.data.status == 'approved' || isAdmin();
+      allow create: if isAdmin() || (
+        request.resource.data.keys().hasOnly(['name', 'role', 'company', 'text', 'initials', 'source', 'sourceUrl', 'status', 'createdAt', 'order', 'rating'])
+        && request.resource.data.status == 'pending'
+        && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80
+        && request.resource.data.text is string && request.resource.data.text.size() >= 10 && request.resource.data.text.size() <= 1500
+        && request.resource.data.role is string && request.resource.data.role.size() <= 80
+        && request.resource.data.company is string && request.resource.data.company.size() <= 80
+        && request.resource.data.sourceUrl is string && request.resource.data.sourceUrl.size() <= 300
+        && (request.resource.data.sourceUrl == '' || request.resource.data.sourceUrl.matches('https?://.*'))
+        && (!('rating' in request.resource.data) || (request.resource.data.rating is int && request.resource.data.rating >= 1 && request.resource.data.rating <= 5))
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    // Visit records (TEST): browsers may only add; the dashboard reads them.
+    match /visits/{id} {
+      allow create: if request.resource.data.keys().hasOnly(
+          ['at', 'ip', 'country', 'region', 'city', 'timezone', 'device', 'os', 'browser',
+           'userAgent', 'language', 'screen', 'referrer', 'source', 'page'])
+        && request.resource.data.userAgent is string && request.resource.data.userAgent.size() < 600;
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
+    // Chatbot conversations: browsers may only add; the dashboard reads them.
+    match /chats/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['at', 'session', 'question', 'answer'])
+        && request.resource.data.question is string && request.resource.data.question.size() <= 800
+        && request.resource.data.answer is string && request.resource.data.answer.size() <= 4000;
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
+    // Newsletter: visitors may only add their own email (doc id = email); the dashboard manages the list.
+    match /subscribers/{email} {
+      allow create: if request.resource.data.keys().hasOnly(['email', 'at'])
+        && request.resource.data.email == email
+        && email.size() <= 200 && email.matches('[^@\\s]+@[^@\\s]+\\.[^@\\s]+');
+      allow read, delete: if isAdmin();
+      allow update: if false;
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

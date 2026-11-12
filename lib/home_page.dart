@@ -8,6 +8,8 @@ import 'package:medbh_portfolio/description_section.dart';
 import 'package:medbh_portfolio/explore_button.dart';
 import 'package:medbh_portfolio/header.dart';
 import 'package:medbh_portfolio/logo_tagline.dart';
+import 'package:medbh_portfolio/widgets/newsletter_section.dart';
+import 'package:medbh_portfolio/widgets/stats_counters.dart';
 import 'package:medbh_portfolio/widgets/contact_section.dart';
 import 'package:medbh_portfolio/widgets/download_cv_button.dart';
 import 'package:medbh_portfolio/widgets/experience_section.dart';
@@ -143,7 +145,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Column(
-                key: ValueKey(ContentStore.instance.version), // remount sections with new content
+                key: ValueKey(
+                  ContentStore.instance.version,
+                ), // remount sections with new content
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(
@@ -184,12 +188,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     },
                   ),
                   const SizedBox(height: 40),
+                  const Center(child: StatsCounters()),
+                  const SizedBox(height: 120),
                   Center(
                     child: isMobile
                         ? Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              ExploreButton(onTap: () => scrollToSection(1)),
+                              ExploreButton(onTap: () => scrollToSection(3)),
                               const SizedBox(height: 16),
                               const DownloadCVButton(),
                             ],
@@ -197,7 +203,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         : Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              ExploreButton(onTap: () => scrollToSection(1)),
+                              ExploreButton(onTap: () => scrollToSection(3)),
                               const SizedBox(width: 30),
                               const DownloadCVButton(),
                             ],
@@ -207,11 +213,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   SizedBox(key: _technologiesKey, height: 100),
                   const TechnologiesSection(),
                   const SizedBox(height: 80),
-                  SizedBox(key: _experienceKey, height: 100),
-                  const ExperienceSection(),
-                  const SizedBox(height: 80),
                   SizedBox(key: _projectsKey, height: 100),
                   const ProjectsSection(),
+                  const SizedBox(height: 80),
+                  SizedBox(key: _experienceKey, height: 100),
+                  const ExperienceSection(),
                   const SizedBox(height: 80),
                   SizedBox(key: _reviewsKey, height: 100),
                   const ReviewsSection(),
@@ -231,20 +237,42 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 isScrolled: _isScrolled,
               ),
             ),
-            if (_showBackToTop)
-              Positioned(
-                bottom: 96, // above the chatbot button
-                right: 24,
-                child: FloatingActionButton.small(
-                  onPressed: () => scrollToSection(0),
-                  backgroundColor: AppColors.floatingButtonBackground,
-                  child: const Icon(
-                    Icons.arrow_upward,
-                    color: AppColors.floatingButtonIcon,
-                  ),
+            const Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: NewsletterPopup(),
+            ),
+            // Floating buttons ride above the newsletter bar while it is shown.
+            ValueListenableBuilder<double>(
+              valueListenable: NewsletterPopup.height,
+              builder: (context, lift, _) => AnimatedPositioned(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                left: 0,
+                right: 0,
+                top: 0,
+                bottom: lift,
+                child: Stack(
+                  children: [
+                    if (_showBackToTop)
+                      Positioned(
+                        bottom: 96, // above the chatbot button
+                        right: 24,
+                        child: FloatingActionButton.small(
+                          onPressed: () => scrollToSection(0),
+                          backgroundColor: AppColors.floatingButtonBackground,
+                          child: const Icon(
+                            Icons.arrow_upward,
+                            color: AppColors.floatingButtonIcon,
+                          ),
+                        ),
+                      ),
+                    const Positioned.fill(child: FloatingChatBotButton()),
+                  ],
                 ),
               ),
-            const Positioned.fill(child: FloatingChatBotButton()),
+            ),
           ],
         ),
       ),

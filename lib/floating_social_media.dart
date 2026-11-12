@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:medbh_portfolio/constants/app_strings.dart';
+import 'package:medbh_portfolio/services/content_store.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class FloatingSocialMediaBar extends StatelessWidget {
@@ -13,17 +12,17 @@ class FloatingSocialMediaBar extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SocialIconHover(
-          icon: FontAwesomeIcons.github,
-          url: AppStrings.githubUrl,
+          icon: 'assets/github.png',
+          url: ContentStore.instance.githubUrl,
         ),
         SocialIconHover(
-          icon: FontAwesomeIcons.linkedinIn,
-          url: AppStrings.linkedinUrl,
+          icon: 'assets/linkedin.png',
+          url: ContentStore.instance.linkedinUrl,
         ),
         SocialIconHover(
-          icon: FontAwesomeIcons.whatsapp,
+          icon: 'assets/whatsapp.png',
           url:
-              "https://wa.me/${AppStrings.whatsappNumber}?text=${Uri.encodeComponent("Hello, I am interested in your portfolio!")}",
+              "https://wa.me/${ContentStore.instance.whatsappNumber}?text=${Uri.encodeComponent("Hello, I am interested in your portfolio!")}",
         ),
       ],
     );
@@ -31,7 +30,7 @@ class FloatingSocialMediaBar extends StatelessWidget {
 }
 
 class SocialIconHover extends StatefulWidget {
-  final IconData icon;
+  final String icon; // png asset, tinted
   final String url;
 
   const SocialIconHover({required this.icon, required this.url, super.key});
@@ -76,10 +75,11 @@ class _SocialIconHoverState extends State<SocialIconHover> {
                     ]
                   : [],
             ),
-            child: Icon(
+            child: Image.asset(
               widget.icon,
               color: isHovering ? Colors.white : Colors.black.withOpacity(0.7),
-              size: 20,
+              width: 20,
+              height: 20,
             ),
           ),
         ),

@@ -1,5 +1,23 @@
 {
   "projects": {
     "default": "mohamedbh-portfolio"
-  }
+  },
+  "targets": {
+    "mohamedbh-portfolio": {
+      "hosting": {
+        "portfolio-redirect": [
+          "mohamedbh-portfolio"
+        ]
+      }
+    },
+    "mohamedbenhmida-portfolio": {
+      "hosting": {
+        "portfolio": [
+          "mohamedbenhmida-portfolio"
+        ]
+      }
+    }
+  },
+  "etags": {},
+  "dataconnectEmulatorConfig": {}
 }

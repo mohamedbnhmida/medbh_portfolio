@@ -1,7 +1,7 @@
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:medbh_portfolio/constants/app_data.dart';
+import 'package:medbh_portfolio/services/content_store.dart';
 import 'package:medbh_portfolio/widgets/project_card.dart';
 
 class ProjectsSection extends StatefulWidget {
@@ -33,8 +33,9 @@ class _ProjectsSectionState extends State<ProjectsSection>
   }
 
   Widget _buildCarousel({required bool isDesktop, required bool isWebDesktop}) {
-    final projects =
-        isWebDesktop ? AppData.webDesktopProjects : AppData.mobileProjects;
+    final projects = isWebDesktop
+        ? ContentStore.instance.webDesktopProjects
+        : ContentStore.instance.mobileProjects;
 
     final double height = isWebDesktop
         ? (isDesktop ? 440.0 : 320.0)
@@ -64,7 +65,7 @@ class _ProjectsSectionState extends State<ProjectsSection>
       items: projects.map((project) {
         return Builder(
           builder: (BuildContext context) {
-            return ProjectCard(project: project);
+            return ProjectCard(project: project, projects: projects);
           },
         );
       }).toList(),

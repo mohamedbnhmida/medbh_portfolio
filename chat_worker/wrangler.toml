@@ -1,0 +1,27 @@
+name = "portfolio-chat"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Only these sites may call the worker (browser CORS).
+[vars]
+SENDER_EMAIL = "mohamed-benhmida@outlook.com"   # verified Brevo sender
+GEMINI_MODEL = "gemini-flash-latest"   # change to pin a specific Gemini model
+CONTACT_TO = "mohamed-benhmida@outlook.com"
+# Newsletter sending (/newsletter): only this dashboard login, checked with this public Firebase web key.
+ADMIN_EMAIL = "mohamed1995176@gmail.com"
+FIREBASE_API_KEY = "AIzaSyAqQ1UlL9Y6OfSO4vCr1rRctQaF5EoGtjc"
+ALLOWED_ORIGINS = "https://mohamedbenhmida-portfolio.web.app,https://mohamedbenhmida-portfolio.firebaseapp.com,https://mohamedbenhmida-dashboard.web.app,https://mohamedbenhmida-dashboard.firebaseapp.com,https://mohamedbh-portfolio.web.app,https://mohamedbh-portfolio.firebaseapp.com,http://localhost:8080"
+
+# Per-visitor limit: 10 questions per minute (key = connecting IP, not stored).
+[[ratelimits]]
+name = "CHAT_LIMITER"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 10
+  period = 60
+
+# Keys are secrets, never in this file:
+#   npx wrangler secret put BREVO_API_KEY       (contact form)
+#   npx wrangler secret put GEMINI_API_KEY      (chatbot, aistudio.google.com/apikey)

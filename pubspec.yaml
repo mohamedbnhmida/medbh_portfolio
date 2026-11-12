@@ -35,12 +35,16 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   google_fonts: ^6.1.0
-  font_awesome_flutter: ^10.7.0
+  font_awesome_flutter: ^11.0.0
   flutter_svg: ^2.0.7
   http: ^1.2.0
   url_launcher: ^6.2.5
   carousel_slider: ^5.0.0
   flutter_email_sender: ^6.0.3
+  firebase_core: ^4.15.0
+  web: ^1.1.1
+  firebase_analytics: ^12.6.0
+  cloud_firestore: ^6.10.0
 
 dev_dependencies:
   flutter_test:
@@ -69,7 +73,16 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/
+    - assets/tech/
+    - assets/logos/
+    - assets/certs/
     - assets/projects/
+    - assets/projects/shada_led/
+    - assets/projects/shada_led/screenshots/
+    - assets/projects/stocky/
+    - assets/projects/stocky/screenshots/
+    - assets/projects/my_ludo/
+    - assets/projects/my_ludo/screenshots/
     - assets/projects/aswan/
     - assets/projects/aswan/screenshots/
     - assets/projects/digital_lib/ 

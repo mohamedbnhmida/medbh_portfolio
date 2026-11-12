@@ -1,11 +1,11 @@
 {
-    "name": "medbh_portfolio",
-    "short_name": "medbh_portfolio",
+    "name": "Mohamed Ben Hmida — iOS & Flutter Developer",
+    "short_name": "Mohamed Ben Hmida",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Senior mobile developer — iOS (Swift/SwiftUI) & Flutter. Apps published on the App Store and Google Play.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
